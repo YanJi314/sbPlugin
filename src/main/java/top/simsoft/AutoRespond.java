@@ -4,7 +4,6 @@ import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.Event;
 import net.mamoe.mirai.event.EventChannel;
 import net.mamoe.mirai.event.GlobalEventChannel;
-import net.mamoe.mirai.event.events.FriendMessageEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.NudgeEvent;
 import net.mamoe.mirai.internal.deps.okhttp3.*;
@@ -38,7 +37,7 @@ public class AutoRespond {
             Integer starxnGroup = 638992550;
 
             // =====================禁止复读鸡=====================
-            if(messageHistory.getOrDefault(g.getGroup().getId(),"").equals(message) && !message.contains("动画表情") && !message.contains("图片") && Math.random()>0.6){
+            if(messageHistory.getOrDefault(g.getGroup().getId(),"").equals(message) && !message.contains("动画表情") && !message.contains("图片") && !message.contains("草") && Math.random()>0.6){
                 if(!message.equals("打断复读！")){g.getGroup().sendMessage("打断复读！");}
                 doSendMessage=false;
             }
@@ -48,11 +47,8 @@ public class AutoRespond {
 
                 // =====================星辰云特色功能=====================
                 if (g.getGroup().getId() == starxnGroup) {
-                    // 打不开 & 用不了
-                    if (message.equals("dbk")) {
-                        sendMessage(g, "请去 status.starxn.com 确认服务状态，如果502就等待几分钟，如果状态正常但打不开请提供域名和错误截图。");
                     // 星辰云各站链接
-                    } else if (message.equals("link")) {
+                    if (message.equals("link")) {
                         sendMessage(g, "--== < Links > ==--\n" +
                                 "星辰云主站：starxn.com\n" +
                                 "星辰云二级：dns.starxn.com\n" +
@@ -62,9 +58,11 @@ public class AutoRespond {
                                 "服务器教程：yuque.com/afqaq/ei24o3");
                     // 获取星辰云当前状态
                     } else if (message.equals("stat")) {
-                        g.getGroup().sendMessage(getStatus("hk1", "香港1区-铂金区") + "\n" +
+                        g.getGroup().sendMessage("--== < Status > ==--\n" +
+                                getStatus("hk1", "香港1区-铂金区") + "\n" +
                                 getStatus("hk2", "香港2区-尊享区") + "\n" +
-                                getStatus("vhost", "荧-虚拟主机"));
+                                getStatus("vhost", "荧-虚拟主机") + "\n" +
+                                "(以上提供的产品状态仅供参考)");
                     // 随机血压语录
                     } else if (Math.random() >= 0.999) {
                         String bloodPressureMessage = randomMessage(bloodPressureMessagePool);
@@ -77,13 +75,11 @@ public class AutoRespond {
                 if (g.getGroup().getId() == starxnGroup){dstDefault = "阿付 wuli 归星 小脆糖 盐鸡 射线 XIAYM 冰块 Yo酱 亦云 茗茶 LiCaoZ";}
                 if (message.startsWith("dst")) {
                     String dstPeople = message.replace("dst ", "").replace("dst", "");
-                    if (message.trim().equals("dst")) { dstPeople = dstDefault; }
+                    if (dstPeople.isEmpty()) { dstPeople = dstDefault; }
                     getDst(dstPeople, g);
                 }
 
             }
-        });
-        eventChannel.subscribeAlways(FriendMessageEvent.class, f -> {
         });
         eventChannel.subscribeAlways(NudgeEvent.class, n ->{
             if(Math.random()*100<50)return;
@@ -129,13 +125,12 @@ public class AutoRespond {
         Request request = new Request.Builder().url("https://i.simsoft.top/dosth/api?people="+ URLEncoder.encode(people, StandardCharsets.UTF_8)).get().build();
         http.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                sendMessage(g,"Dosth API 连接失败，请稍后再试。");
-            }
-
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {sendMessage(g,"Dosth API 连接失败，请稍后再试。");}
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                sendMessage(g,response.body().string());
+                String dstResponseContent = response.body().string();
+                if(!dstResponseContent.contains("[DoSth API]")) {sendMessage(g, dstResponseContent);}
+                else{sendMessage(g,"DoSth API 返回异常，可能包含违禁词。");}
             }
         });
     }
