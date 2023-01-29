@@ -7,8 +7,14 @@ import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.NudgeEvent;
 import net.mamoe.mirai.internal.deps.okhttp3.*;
+import net.mamoe.mirai.message.data.Image;
+import net.mamoe.mirai.utils.ExternalResource;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.io.InterruptedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +43,7 @@ public class AutoRespond {
             Integer starxnGroup = 638992550;
 
             // =====================禁止复读鸡=====================
-            if(messageHistory.getOrDefault(g.getGroup().getId(),"").equals(message) && !message.contains("动画表情") && !message.contains("图片") && !message.contains("草") && Math.random()>0.6){
+            if(messageHistory.getOrDefault(g.getGroup().getId(),"").equals(message) && !message.contains("动画表情") && !message.contains("语音") && !message.contains("图片") && !message.contains("草") && Math.random()>0.6){
                 if(!message.equals("打断复读！")){g.getGroup().sendMessage("打断复读！");}
                 doSendMessage=false;
             }
@@ -78,6 +84,31 @@ public class AutoRespond {
                     if (dstPeople.isEmpty()) { dstPeople = dstDefault; }
                     getDst(dstPeople, g);
                 }
+
+                // =====================JDC黑历史云储库=====================
+                if (message.startsWith("jdc ")) {
+                    String searchWord=message.replace("jdc ","");
+                    if(searchWord.isEmpty()){
+                        sendMessage(g,"搜索内容为空。");
+                    }else {
+                        try {
+                            File file = fetchJdc(searchWord);
+
+                            if (file != null) {
+                                ExternalResource resource = ExternalResource.create(file);
+                                Image image = g.getGroup().uploadImage(resource);
+                                g.getGroup().sendMessage(image);
+                                messageHistory.put(g.getGroup().getId(),"");
+                                resource.close();
+                            }
+                        } catch (Exception ex) {
+                            if (ex instanceof InterruptedIOException) return;
+                            sendMessage(g,"未匹配到查找的 JDC 图片。");
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+
 
             }
         });
@@ -147,5 +178,24 @@ public class AutoRespond {
         }
 
         return testResult;
+    }
+
+    public static synchronized File fetchJdc(String search) throws Exception {
+        try {
+            File file = new File(YanJisMiraiPlugin.INSTANCE.getDataFolder(), "cache/");
+            if (!file.exists() && !file.mkdirs()) {return null;}
+
+            Request imageReq = new Request.Builder().url("https://jdc.nlrdev.top/botsearch.php?find=" + URLEncoder.encode(search,StandardCharsets.UTF_8)).get().build();
+            Response imageRes = http.newCall(imageReq).execute();
+            if (imageRes.body() == null) throw new Exception("L");
+
+            Path cachePicturePath = new File(file, search).toPath();
+            Files.deleteIfExists(cachePicturePath);
+            Files.copy(imageRes.body().byteStream(), cachePicturePath);
+
+            return cachePicturePath.toFile();
+        } catch (Exception e) {
+            throw e;
+        }
     }
 }
