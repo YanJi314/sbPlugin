@@ -110,6 +110,41 @@ public class AutoRespond {
                 }
 
 
+                // =====================今日人品查询器=====================
+                if (message.startsWith("今日人品")) {
+                    String searchWord= message.replace("今日人品","").replace("@","").replace(" ","");
+                    if(searchWord.isEmpty()){
+                        searchWord= String.valueOf(g.getSender().getId());
+                    }
+                    Request request = new Request.Builder().url("https://api.simsoft.top/luck/todayLuck?q="+searchWord).get().build();
+                    http.newCall(request).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(@NotNull Call call, @NotNull IOException e) {sendMessage(g,"查询人品时出现错误！");}
+                        @Override
+                        public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                            String responseContent = response.body().string();
+                            sendMessage(g,responseContent);
+                        }
+                    });
+                }
+                if (message.startsWith("人品统计")) {
+                    String searchWord= message.replace("人品统计","").replace("@","").replace(" ","");
+                    if(searchWord.isEmpty()){
+                        searchWord= String.valueOf(g.getSender().getId());
+                    }
+                    Request request = new Request.Builder().url("https://api.simsoft.top/luck/searchLuck?q="+searchWord).get().build();
+                    http.newCall(request).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(@NotNull Call call, @NotNull IOException e) {sendMessage(g,"查询人品时出现错误！");}
+                        @Override
+                        public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                            String responseContent = response.body().string();
+                            sendMessage(g,responseContent);
+                        }
+                    });
+                }
+
+
             }
         });
         eventChannel.subscribeAlways(NudgeEvent.class, n ->{
