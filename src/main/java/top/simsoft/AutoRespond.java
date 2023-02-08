@@ -22,16 +22,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AutoRespond {
     public static ArrayList<String> nudgeMessagePool;
-    public static ArrayList<String> bloodPressureMessagePool;
     public static HashMap<Long, String> messageHistory = new HashMap<Long, String>();
     private static void initializeMessagePool(){
         nudgeMessagePool = new ArrayList<>();
         nudgeMessagePool.addAll(Arrays.asList(nudgeMessages));
-        bloodPressureMessagePool = new ArrayList<>();
-        bloodPressureMessagePool.addAll(Arrays.asList(bloodPressureMessages));
     }
     public static final OkHttpClient http = new OkHttpClient.Builder().connectTimeout(6, TimeUnit.SECONDS).readTimeout(10,TimeUnit.SECONDS).build();
     public static void onEnable(){
@@ -41,6 +40,7 @@ public class AutoRespond {
             String message = g.getMessage().contentToString();
             Boolean doSendMessage = true;
             Integer starxnGroup = 638992550;
+            Integer testGroup = 157926237;
 
             // =====================禁止复读鸡=====================
             if(messageHistory.getOrDefault(g.getGroup().getId(),"").equals(message) && !message.contains("动画表情") && !message.contains("语音") && !message.contains("图片") && !message.contains("草") && Math.random()>0.6){
@@ -52,7 +52,7 @@ public class AutoRespond {
             if(doSendMessage) {
 
                 // =====================星辰云特色功能=====================
-                if (g.getGroup().getId() == starxnGroup) {
+                if (g.getGroup().getId() == starxnGroup || g.getGroup().getId() == testGroup) {
                     // 星辰云各站链接
                     if (message.equals("link")) {
                         sendMessage(g, "--== < Links > ==--\n" +
@@ -68,11 +68,8 @@ public class AutoRespond {
                                 getStatus("hk1", "香港1区-铂金区") + "\n" +
                                 getStatus("hk2", "香港2区-尊享区") + "\n" +
                                 getStatus("vhost", "荧-虚拟主机") + "\n" +
+                                getStatusWarn() + "\n" +
                                 "(以上提供的产品状态仅供参考)");
-                    // 随机血压语录
-                    } else if (Math.random() >= 0.999) {
-                        String bloodPressureMessage = randomMessage(bloodPressureMessagePool);
-                        sendMessage(g, bloodPressureMessage);
                     }
                 }
 
@@ -173,19 +170,7 @@ public class AutoRespond {
         "哼哼哼啊啊啊啊啊啊啊",
         "再戳我就撅炸你"
     };
-    public static String[] bloodPressureMessages = {
-        "网站突然打不开了咋办",
-        "网站好慢啊",
-        "为什么昨天还能用今天就不行了",
-        "怎么连不上服务器了",
-        "二级域名怎么用",
-        "哪里有永久的免费域名",
-        "主机怎么用啊",
-        "是不是跑路了",
-        "为什么群主就能用",
-        "群主欺负我",
-        "官网怎么打不开了"
-    };
+
 
     private static void getDst(String people,GroupMessageEvent g){
         Request request = new Request.Builder().url("https://i.simsoft.top/dosth/api?people="+ URLEncoder.encode(people, StandardCharsets.UTF_8)).get().build();
@@ -214,6 +199,27 @@ public class AutoRespond {
 
         return testResult;
     }
+    private static String getStatusWarn() {
+        Request request = new Request.Builder().url("https://status.starxn.com/status/starxn").get().build();
+        String testResult;
+        try {
+            Response res = http.newCall(request).execute();
+            String htmlData=res.body().string();
+            testResult = "目前暂无运营状态信息";
+            String[] htmlSplit = htmlData.split("'warning','title':'");
+            if(htmlSplit.length>1) {
+                htmlData = htmlSplit[1];
+                String warningTitle = htmlData.split("'")[0];
+                if (!warningTitle.isEmpty()) {
+                    testResult = "运营状态信息：" + unicodeDecode(warningTitle) + "，请前往 status.starxn.com 查看。";
+                }
+            }else{testResult = "目前暂无运营状态信息";}
+        } catch (Exception e) {
+            testResult = "目前暂无运营状态信息";
+        }
+
+        return testResult;
+    }
 
     public static synchronized File fetchJdc(String search) throws Exception {
         try {
@@ -233,4 +239,18 @@ public class AutoRespond {
             throw e;
         }
     }
+
+
+    // Unicode转中文器
+    public static String unicodeDecode(String string){
+        Pattern pattern = Pattern.compile("(\\\\u(\\p{XDigit}{4}))");
+        Matcher matcher = pattern.matcher(string);
+        char ch;
+        while (matcher.find()){
+            ch=(char) Integer.parseInt(matcher.group(2),16);
+            string = string.replace(matcher.group(1),ch+"");
+        }
+        return string;
+    }
 }
+
