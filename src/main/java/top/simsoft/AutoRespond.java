@@ -64,12 +64,7 @@ public class AutoRespond {
                                 "服务器教程：yuque.com/afqaq/ei24o3");
                     // 获取星辰云当前状态
                     } else if (message.equals("stat")) {
-                        g.getGroup().sendMessage("--== < Status > ==--\n" +
-                                getStatus("hk1", "香港1区-铂金区") + "\n" +
-                                getStatus("hk2", "香港2区-尊享区") + "\n" +
-                                getStatus("vhost", "荧-虚拟主机") + "\n" +
-                                getStatusWarn() + "\n" +
-                                "(以上提供的产品状态仅供参考)");
+                        g.getGroup().sendMessage("--== < Status > ==--\n" + getStatusWarn());
                     }
                 }
 
@@ -186,19 +181,7 @@ public class AutoRespond {
         });
     }
 
-    private static String getStatus(String testDomain, String nodeName) {
-        Request request = new Request.Builder().url("http://"+testDomain+".starxn-status.qin.cab/").get().build();
-        String testResult;
-        try {
-            Response res = http.newCall(request).execute();
-            if(res.body().string().equals("200")){testResult =  nodeName+" 当前状态：正常运行";}
-            else{testResult = nodeName+" 当前状态：可能无法连接";}
-        } catch (IOException e) {
-            testResult = nodeName+" 当前状态：可能无法连接";
-        }
 
-        return testResult;
-    }
     private static String getStatusWarn() {
         Request request = new Request.Builder().url("https://status.starxn.com/status/starxn").get().build();
         String testResult;
