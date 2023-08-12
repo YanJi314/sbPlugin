@@ -168,7 +168,7 @@ public class AutoRespond {
 
 
     private static void getDst(String people,GroupMessageEvent g){
-        Request request = new Request.Builder().url("https://i.simsoft.top/dosth/api?people="+ URLEncoder.encode(people, StandardCharsets.UTF_8)).get().build();
+        Request request = new Request.Builder().url("https://i.simsv.com/dosth/api?people="+ URLEncoder.encode(people, StandardCharsets.UTF_8)).get().build();
         http.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {sendMessage(g,"Dosth API 连接失败，请稍后再试。");}
